@@ -1,0 +1,136 @@
+// Meetsy Event Management System — Prisma Schema
+// Last updated: 2026-06-05
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Admin {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+}
+
+model Participant {
+  id            String         @id @default(cuid())
+  name          String
+  email         String?        @unique
+  phone         String?
+  company       String?
+  jobTitle      String?
+  industry      String?
+  city          String?
+  source        String         @default("import") // import | onsite | manual
+  embedding     Unsupported("vector(1536)")? // pgvector — set after ETL
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  registrations Registration[]
+
+  @@index([industry])
+  @@index([city])
+  @@index([jobTitle])
+}
+
+model Event {
+  id                String        @id @default(cuid())
+  title             String
+  slug              String        @unique
+  date              DateTime
+  timeStart         String
+  timeEnd           String
+  city              String
+  venue             String
+  address           String?
+  description       String?
+  theme             String?
+  capacity          Int
+  staffPinHash      String        // bcrypt hashed PIN
+  staffPinRaw       String?       // plain text PIN for admin viewing
+  formSchema        Json          // JSONB — array of question objects
+  inviteEmailTemplate Json?       // JSONB — { subject, html }
+  pendingEmailTemplate Json?      // JSONB — { subject, html }
+  approvalEmailTemplate Json?     // JSONB — { subject, html }
+  rejectionEmailTemplate Json?    // JSONB — { subject, html }
+  status            EventStatus   @default(DRAFT)
+  registrationOpen  DateTime?
+  registrationClose DateTime?
+  createdAt         DateTime      @default(now())
+  registrations     Registration[]
+  importBatches     ImportBatch[]
+}
+
+enum EventStatus {
+  DRAFT
+  OPEN
+  CLOSED
+  DONE
+}
+
+model Registration {
+  id            String             @id @default(cuid())
+  participantId String
+  eventId       String
+  status        RegistrationStatus @default(PENDING)
+  answers       Json?              // JSONB — survey answers keyed by question id
+  qrToken       String?            @unique // signed JWT for QR
+  channel       String             @default("online") // online | onsite
+  invitedAt     DateTime?
+  registeredAt  DateTime           @default(now())
+  approvedAt    DateTime?
+  rejectedAt    DateTime?
+  participant   Participant        @relation(fields: [participantId], references: [id])
+  event         Event              @relation(fields: [eventId], references: [id])
+  attendance    Attendance?
+
+  @@unique([participantId, eventId]) // one registration per participant per event
+}
+
+enum RegistrationStatus {
+  PENDING
+  WAITLISTED
+  APPROVED
+  REJECTED
+  ATTENDED
+}
+
+model Attendance {
+  id             String       @id @default(cuid())
+  registrationId String       @unique
+  scannedAt      DateTime     @default(now())
+  scannedBy      String       // "admin" or staff_session token
+  registration   Registration @relation(fields: [registrationId], references: [id])
+}
+
+model ImportBatch {
+  id            String   @id @default(cuid())
+  filename      String
+  totalRows     Int      @default(0)
+  cleanedRows   Int      @default(0)
+  aiRows        Int      @default(0)
+  flaggedRows   Int      @default(0)
+  discardedRows Int      @default(0)
+  status        String   @default("pending") // pending | processing | complete | failed
+  currentPhase  String   @default("queued")  // queued | mapping_columns | processing_rows | ai_enrichment | saving | complete
+  createdAt     DateTime @default(now())
+  eventId       String?
+  event         Event?   @relation(fields: [eventId], references: [id])
+  flaggedData   FlaggedData[]
+}
+
+model FlaggedData {
+  id        String      @id @default(cuid())
+  batchId   String
+  rawData   Json        // The original JSON data that failed
+  reason    String      // Why it failed (e.g. "Missing email", "AI not confident")
+  status    String      @default("PENDING") // PENDING | RESOLVED | DISCARDED
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  batch     ImportBatch @relation(fields: [batchId], references: [id])
+}

@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <rect x="32" y="32" width="448" height="448" rx="64" fill="#171717" stroke="#e11d48" stroke-width="32"/>
+  <text x="256" y="340" font-family="Arial Black, Impact, sans-serif" font-size="280" font-weight="900" fill="white" text-anchor="middle">M</text>
+  <rect x="156" y="410" width="200" height="56" rx="12" fill="#e11d48"/>
+  <text x="256" y="449" font-family="Arial, sans-serif" font-size="36" font-weight="900" fill="white" text-anchor="middle" letter-spacing="6">STAFF</text>
+</svg>
