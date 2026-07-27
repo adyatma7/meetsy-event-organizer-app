@@ -74,7 +74,7 @@ export default function AdminLogin() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               icon={Mail}
-              placeholder="admin@Meetsy.com"
+              placeholder="email"
             />
 
             <Input

@@ -20,7 +20,6 @@ export default defineConfig({
         display: 'standalone',
         icons: [
           {
-          {
             src: 'pwa-192x192.svg',
             sizes: '192x192',
             type: 'image/svg+xml'
@@ -38,7 +37,7 @@ export default defineConfig({
     port: 5173,
     proxy: {
       '/api': {
-        target: 'http://localhost:3000',
+        target: 'http://localhost:3001',
         changeOrigin: true,
       },
     },

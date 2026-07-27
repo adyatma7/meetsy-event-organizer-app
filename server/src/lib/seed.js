@@ -12,9 +12,9 @@ const bcrypt = require('bcryptjs');
 async function seed() {
   console.log('🌱 Seeding database...\n');
 
-  // --- Create admin account ---
-  const email = process.env.ADMIN_EMAIL || 'admin@Meetsy.com';
-  const password = process.env.ADMIN_PASSWORD || 'admin123';
+  // --- Create Super Admin account ---
+  const email = process.env.ADMIN_EMAIL || 'superadmin@meetsy.com';
+  const password = process.env.ADMIN_PASSWORD || 'superadmin123';
   const passwordHash = await bcrypt.hash(password, 10);
 
   const admin = await prisma.admin.upsert({
@@ -23,7 +23,7 @@ async function seed() {
     create: { email, passwordHash },
   });
 
-  console.log(`✅ Admin created: ${admin.email}`);
+  console.log(`✅ Super Admin created: ${admin.email}`);
 
   // --- TODO: Add sample events, participants, registrations ---
   // Will be populated in Phase 9 (Polish)

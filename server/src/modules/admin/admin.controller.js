@@ -3,6 +3,15 @@ const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 
 async function getSuperAdminId() {
+  const envAdminEmail = process.env.ADMIN_EMAIL;
+  if (envAdminEmail) {
+    const envAdmin = await prisma.admin.findUnique({
+      where: { email: envAdminEmail },
+      select: { id: true }
+    });
+    if (envAdmin) return envAdmin.id;
+  }
+
   const oldestAdmin = await prisma.admin.findFirst({
     orderBy: { createdAt: 'asc' },
     select: { id: true }
@@ -21,7 +30,7 @@ async function getAdmins(req, res, next) {
       orderBy: { createdAt: 'asc' }
     });
     
-    const superAdminId = admins.length > 0 ? admins[0].id : null;
+    const superAdminId = await getSuperAdminId();
     const isCurrentUserSuperAdmin = req.admin.sub === superAdminId;
 
     res.json({ success: true, admins, isSuperAdmin: isCurrentUserSuperAdmin, superAdminId });
